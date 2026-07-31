@@ -114,6 +114,28 @@ CONCURRENT_USERS="2 3 5" DURATION=5 QUERY_ENDPOINT="/select?q=india" ./run-siege
 `cpp_data.json`, which hold the real recorded study results. Numbers from this single node laptop
 would replace them and the dashboard would then understate the project.
 
+### What a live run looks like on this laptop
+
+Measured 2026-08-01, 1 Solr node, 512m heap, 10k docs, browsers open:
+
+| Concurrency | C++ client QPS | p50 | p95 | p99 | Availability |
+|---|---|---|---|---|---|
+| 2 | 193 | 8.7 ms | 19.0 ms | 28.2 ms | 100% |
+| 5 | 335 | 13.7 ms | 25.1 ms | 36.4 ms | 100% |
+| 10 | 426 | 22.1 ms | 37.6 ms | 50.4 ms | 100% |
+
+siege over the same range gave 360 to 467 QPS, also 100% availability.
+
+**If asked why this is ~400 QPS while the report shows a 1,987 QPS peak:** different hardware and a
+deliberately trimmed deployment. The study ran a full topology with room to breathe; this is one
+node with a 512 MB heap sharing a laptop with two browsers. The shape is what matters and it
+matches: throughput climbs with concurrency while latency stays flat, then both bend as the node
+saturates. Say this before they ask.
+
+One detail worth pointing at: the client's measured concurrency, derived from Little's Law, comes
+back as 4.99 and 9.98 against targets of 5 and 10. The load generator really is applying the
+concurrency it claims, which is what makes the numbers trustworthy.
+
 ---
 
 ## After changing schema or solrconfig
