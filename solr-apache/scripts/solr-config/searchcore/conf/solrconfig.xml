@@ -60,9 +60,12 @@
       <str name="lookupImpl">FuzzyLookupFactory</str>
       <str name="dictionaryImpl">DocumentDictionaryFactory</str>
       <str name="field">title</str>
-      <str name="weightField">popularity</str>
       <str name="suggestAnalyzerFieldType">text_general</str>
-      <str name="buildOnStartup">false</str>
+      <!-- Rebuild on core load so suggestions survive a restart. buildOnCommit
+           stays off: indexing commits once per chunk, and rebuilding the whole
+           dictionary on each would dominate index time. Trigger an explicit
+           `/suggest?suggest.build=true` after a bulk load instead. -->
+      <str name="buildOnStartup">true</str>
       <str name="buildOnCommit">false</str>
     </lst>
   </searchComponent>
