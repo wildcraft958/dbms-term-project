@@ -99,7 +99,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Navbar scroll effect
     setupNavbarScroll();
+
+    checkBackendAvailability();
 });
+
+// Search needs a live Solr behind the server.py proxy. The statically published
+// build has none, and locally Solr may simply be down, so say so on load rather
+// than letting the first search fail with a bare error.
+async function checkBackendAvailability() {
+    if (!searchResults) return;
+    try {
+        const response = await fetch(`${SOLR_URL}/admin/ping?wt=json`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+    } catch (error) {
+        searchResults.innerHTML =
+            '<div class="no-results">Live search needs a running Solr backend, which this page ' +
+            'cannot reach. See DEMO.md to start it locally. ' +
+            'The <a href="benchmark.html">benchmark dashboard</a> works without one.</div>';
+    }
+}
 
 function debounce(func, delay) {
     let timeout;
