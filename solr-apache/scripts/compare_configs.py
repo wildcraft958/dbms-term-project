@@ -56,7 +56,7 @@ def create_all_charts(output_dir):
                 linewidth=2, markersize=5, label=name.replace('\n', ' '), alpha=0.9)
     ax.set_xlabel('Measured Concurrency', fontsize=13)
     ax.set_ylabel('Queries Per Second (QPS)', fontsize=13)
-    ax.set_title('QPS vs Concurrency — All Configurations', fontsize=16, fontweight='bold', pad=15)
+    ax.set_title('QPS vs Concurrency - All Configurations', fontsize=16, fontweight='bold', pad=15)
     ax.legend(loc='upper right', framealpha=0.8)
     ax.grid(True, alpha=0.15)
     plt.tight_layout()
@@ -108,7 +108,7 @@ def create_all_charts(output_dir):
 
     ax.set_xlabel('Measured Concurrency', fontsize=13)
     ax.set_ylabel('Queries Per Second', fontsize=13)
-    ax.set_title('Standalone Solr — QPS Scaling Curve', fontsize=16, fontweight='bold', pad=15)
+    ax.set_title('Standalone Solr - QPS Scaling Curve', fontsize=16, fontweight='bold', pad=15)
     ax.grid(True, alpha=0.15)
     plt.tight_layout()
     plt.savefig(f"{output_dir}/standalone_scaling_{timestamp}.png", dpi=150, bbox_inches='tight')
