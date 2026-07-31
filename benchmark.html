@@ -1,0 +1,1224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Apache Solr benchmark dashboard — QPS, latency, and availability analysis across standalone and SolrCloud configurations."
+    />
+    <title>Benchmark Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* Benchmark-specific styles */
+      .dashboard-header {
+        text-align: center;
+        padding: 100px 24px 40px;
+      }
+      .dashboard-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--color-text-bright);
+        margin-bottom: 8px;
+      }
+      .dashboard-header p {
+        color: var(--color-text-secondary);
+        font-size: 1.05rem;
+      }
+      .dashboard {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 24px 80px;
+      }
+      .section-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--color-text-bright);
+        margin: 48px 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .section-title::before {
+        content: "";
+        width: 4px;
+        height: 24px;
+        background: linear-gradient(
+          180deg,
+          var(--color-primary),
+          var(--color-accent)
+        );
+        border-radius: 2px;
+      }
+      .section-desc {
+        color: var(--color-text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        max-width: 880px;
+        margin: -8px 0 24px;
+      }
+      .section-desc code {
+        background: var(--color-bg-glass);
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 0.85em;
+        color: var(--color-primary-light);
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+      .stat-card {
+        background: var(--color-bg-card);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        transition: 0.3s ease;
+      }
+      .stat-card:hover {
+        border-color: var(--color-border-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      }
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(
+          135deg,
+          var(--color-primary-light),
+          var(--color-accent)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--color-text-muted);
+        margin-top: 4px;
+      }
+      .stat-detail {
+        font-size: 0.85rem;
+        color: var(--color-text-secondary);
+        margin-top: 8px;
+      }
+      .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(540px, 1fr));
+        gap: 20px;
+      }
+      .chart-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 24px;
+      }
+      .chart-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--color-text);
+        margin-bottom: 16px;
+      }
+      .chart-card canvas {
+        width: 100% !important;
+        max-height: 340px;
+      }
+      .config-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+      .config-tab {
+        padding: 8px 16px;
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        color: var(--color-text-secondary);
+        font-family: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.3s ease;
+      }
+      .config-tab:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary-light);
+      }
+      .config-tab.active {
+        background: rgba(99, 102, 241, 0.15);
+        border-color: var(--color-primary);
+        color: var(--color-primary-light);
+        font-weight: 600;
+      }
+      .data-table-wrapper {
+        overflow-x: auto;
+        margin-top: 20px;
+      }
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      .data-table th {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--color-primary-light);
+        text-align: left;
+        padding: 12px 16px;
+        font-weight: 600;
+        border-bottom: 2px solid var(--color-border);
+        white-space: nowrap;
+      }
+      .data-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-text);
+      }
+      .data-table tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .data-table .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .config-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .config-badge.standalone {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+      }
+      .config-badge.cloud1 {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+      }
+      .config-badge.cloud3n1z {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+      }
+      .config-badge.cloud3n3z {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+      }
+      .insight-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 20px;
+      }
+      .insight-card h3 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+        color: var(--color-text-bright);
+      }
+      .insight-card ul {
+        list-style: none;
+        padding: 0;
+      }
+      .insight-card li {
+        padding: 6px 0;
+        color: var(--color-text-secondary);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .insight-card li::before {
+        content: "→";
+        color: var(--color-primary-light);
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      @media (max-width: 600px) {
+        .chart-grid {
+          grid-template-columns: 1fr;
+        }
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .dashboard-header h1 {
+          font-size: 1.8rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-brand">
+          <svg class="nav-logo" viewBox="0 0 32 32" fill="none">
+            <circle
+              cx="14"
+              cy="14"
+              r="10"
+              stroke="currentColor"
+              stroke-width="2.5"
+            />
+            <line
+              x1="21.5"
+              y1="21.5"
+              x2="28"
+              y2="28"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span>curlygores</span>
+        </a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Search</a>
+          <a href="benchmark.html" class="nav-link active">Benchmarks</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+      <h1>Benchmark Dashboard</h1>
+      <p>Apache Solr 9.3.0 throughput &amp; latency under load — measured by
+        two independent clients on identical hardware.</p>
+    </div>
+
+    <div class="dashboard">
+      <!-- System Overview -->
+      <h2 class="section-title">System Overview</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">22</div>
+          <div class="stat-label">CPU Cores</div>
+          <div class="stat-detail">Benchmark host</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">15GB</div>
+          <div class="stat-label">RAM</div>
+          <div class="stat-detail">Available memory</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">5,000</div>
+          <div class="stat-label">Indexed Docs</div>
+          <div class="stat-detail">Simple-English Wikipedia</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">9.3</div>
+          <div class="stat-label">Solr Version</div>
+          <div class="stat-detail">Lucene 9.x · ZooKeeper 3.8.1</div>
+        </div>
+      </div>
+
+      <!-- ===================== Custom C++ Client ===================== -->
+      <h2 class="section-title">Custom C++ Multithreaded Client</h2>
+      <p class="section-desc">
+        A standalone <strong>C++17</strong> load-test client — reused
+        <code>libcurl</code> connection pool, raw <code>std::thread</code>
+        workers, and measured concurrency via Little's Law
+        (<code>L = &lambda; &times; W</code>). Run live against the
+        <strong>standalone</strong> Solr deployment, it captures full latency
+        percentiles alongside throughput.
+      </p>
+      <div class="stats-grid" id="cppStats"></div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>QPS vs Concurrency</h3>
+          <canvas id="cppQpsChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Latency Percentiles vs Concurrency</h3>
+          <canvas id="cppLatencyChart"></canvas>
+        </div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Concurrency</th>
+              <th class="num">Requests</th>
+              <th class="num">QPS</th>
+              <th class="num">p50 (ms)</th>
+              <th class="num">p95 (ms)</th>
+              <th class="num">p99 (ms)</th>
+              <th class="num">Avail %</th>
+            </tr>
+          </thead>
+          <tbody id="cppTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- ===================== Siege Client ===================== -->
+      <h2 class="section-title">Siege Client</h2>
+      <p class="section-desc">
+        The <strong>siege</strong> HTTP load-tester across four Solr
+        deployments — standalone plus three SolrCloud topologies. It emits
+        the same siege-compatible JSON schema as the C++ client, enabling a
+        head-to-head deployment comparison on identical hardware.
+      </p>
+      <div class="stats-grid" id="siegeStats"></div>
+      <div class="config-tabs">
+        <button class="config-tab active" onclick="showComparison()">
+          All Configs
+        </button>
+        <button class="config-tab" onclick="showSingleConfig(0)">
+          <span class="config-badge standalone">1</span> Standalone
+        </button>
+        <button class="config-tab" onclick="showSingleConfig(1)">
+          <span class="config-badge cloud1">2</span> 1-Node SolrCloud
+        </button>
+        <button class="config-tab" onclick="showSingleConfig(2)">
+          <span class="config-badge cloud3n1z">3</span> 3-Node / 1 ZK
+        </button>
+        <button class="config-tab" onclick="showSingleConfig(3)">
+          <span class="config-badge cloud3n3z">4</span> 3-Node / 3 ZK
+        </button>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>QPS vs Concurrency</h3>
+          <canvas id="qpsChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Peak QPS by Configuration</h3>
+          <canvas id="comparisonChart"></canvas>
+        </div>
+      </div>
+      <div class="config-tabs" id="table-tabs">
+        <button class="config-tab active" onclick="showTable(0, this)">
+          Standalone
+        </button>
+        <button class="config-tab" onclick="showTable(1, this)">
+          1-Node Cloud
+        </button>
+        <button class="config-tab" onclick="showTable(2, this)">
+          3-Node / 1 ZK
+        </button>
+        <button class="config-tab" onclick="showTable(3, this)">
+          3-Node / 3 ZK
+        </button>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table" id="benchmarkTable">
+          <thead>
+            <tr>
+              <th>Concurrency</th>
+              <th class="num">Requests</th>
+              <th class="num">Elapsed (s)</th>
+              <th class="num">QPS</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+
+      // Benchmark Data — generated from data/configs.json by sync_dashboard_data.py
+      /* CONFIGS_DATA_START */
+      const CONFIGS = [
+        {
+          "name": "Standalone",
+          "color": "#22c55e",
+          "bgColor": "rgba(34,197,94,0.15)",
+          "data": [
+            {
+              "concurrency": 1.97,
+              "requests": 1530,
+              "elapsed": 6.42,
+              "qps": 238.32
+            },
+            {
+              "concurrency": 2.92,
+              "requests": 3401,
+              "elapsed": 6.92,
+              "qps": 491.47
+            },
+            {
+              "concurrency": 4.87,
+              "requests": 5453,
+              "elapsed": 6.92,
+              "qps": 788.01
+            },
+            {
+              "concurrency": 6.84,
+              "requests": 7364,
+              "elapsed": 6.91,
+              "qps": 1065.7
+            },
+            {
+              "concurrency": 10.71,
+              "requests": 9410,
+              "elapsed": 6.92,
+              "qps": 1359.83
+            },
+            {
+              "concurrency": 12.7,
+              "requests": 10382,
+              "elapsed": 6.92,
+              "qps": 1500.29
+            },
+            {
+              "concurrency": 16.64,
+              "requests": 11231,
+              "elapsed": 6.92,
+              "qps": 1622.98
+            },
+            {
+              "concurrency": 18.63,
+              "requests": 11100,
+              "elapsed": 6.9,
+              "qps": 1608.7
+            },
+            {
+              "concurrency": 22.57,
+              "requests": 12191,
+              "elapsed": 6.92,
+              "qps": 1761.71
+            },
+            {
+              "concurrency": 28.53,
+              "requests": 13233,
+              "elapsed": 6.89,
+              "qps": 1920.61
+            },
+            {
+              "concurrency": 77.82,
+              "requests": 13550,
+              "elapsed": 6.93,
+              "qps": 1955.27
+            },
+            {
+              "concurrency": 81.53,
+              "requests": 13689,
+              "elapsed": 6.89,
+              "qps": 1986.79
+            }
+          ]
+        },
+        {
+          "name": "1-Node Cloud (2s \u00d7 2r, 1 ZK)",
+          "color": "#818cf8",
+          "bgColor": "rgba(99,102,241,0.15)",
+          "data": [
+            {
+              "concurrency": 1.97,
+              "requests": 239,
+              "elapsed": 6.17,
+              "qps": 38.74
+            },
+            {
+              "concurrency": 2.96,
+              "requests": 694,
+              "elapsed": 6.76,
+              "qps": 102.66
+            },
+            {
+              "concurrency": 4.93,
+              "requests": 875,
+              "elapsed": 6.91,
+              "qps": 126.63
+            },
+            {
+              "concurrency": 6.89,
+              "requests": 1241,
+              "elapsed": 6.7,
+              "qps": 185.22
+            },
+            {
+              "concurrency": 10.83,
+              "requests": 1819,
+              "elapsed": 6.7,
+              "qps": 271.49
+            },
+            {
+              "concurrency": 12.76,
+              "requests": 1740,
+              "elapsed": 6.84,
+              "qps": 254.39
+            },
+            {
+              "concurrency": 16.78,
+              "requests": 2296,
+              "elapsed": 6.97,
+              "qps": 329.41
+            },
+            {
+              "concurrency": 18.69,
+              "requests": 2156,
+              "elapsed": 6.72,
+              "qps": 320.83
+            },
+            {
+              "concurrency": 22.66,
+              "requests": 2076,
+              "elapsed": 6.88,
+              "qps": 301.74
+            },
+            {
+              "concurrency": 28.61,
+              "requests": 2641,
+              "elapsed": 6.88,
+              "qps": 383.87
+            },
+            {
+              "concurrency": 75.94,
+              "requests": 1926,
+              "elapsed": 6.94,
+              "qps": 277.52
+            },
+            {
+              "concurrency": 80.23,
+              "requests": 2231,
+              "elapsed": 6.79,
+              "qps": 328.57
+            }
+          ]
+        },
+        {
+          "name": "3-Node Cloud (3s \u00d7 4r, 1 ZK)",
+          "color": "#f59e0b",
+          "bgColor": "rgba(245,158,11,0.15)",
+          "data": [
+            {
+              "concurrency": 1.99,
+              "requests": 77,
+              "elapsed": 6.3,
+              "qps": 12.22
+            },
+            {
+              "concurrency": 2.97,
+              "requests": 316,
+              "elapsed": 6.89,
+              "qps": 45.86
+            },
+            {
+              "concurrency": 4.94,
+              "requests": 478,
+              "elapsed": 6.81,
+              "qps": 70.19
+            },
+            {
+              "concurrency": 6.91,
+              "requests": 642,
+              "elapsed": 6.59,
+              "qps": 97.42
+            },
+            {
+              "concurrency": 10.8,
+              "requests": 909,
+              "elapsed": 6.81,
+              "qps": 133.48
+            },
+            {
+              "concurrency": 12.81,
+              "requests": 889,
+              "elapsed": 6.81,
+              "qps": 130.54
+            },
+            {
+              "concurrency": 16.74,
+              "requests": 1158,
+              "elapsed": 6.76,
+              "qps": 171.3
+            },
+            {
+              "concurrency": 18.77,
+              "requests": 1926,
+              "elapsed": 6.85,
+              "qps": 281.17
+            },
+            {
+              "concurrency": 22.72,
+              "requests": 2227,
+              "elapsed": 6.91,
+              "qps": 322.29
+            },
+            {
+              "concurrency": 28.59,
+              "requests": 2634,
+              "elapsed": 6.93,
+              "qps": 380.09
+            },
+            {
+              "concurrency": 75.61,
+              "requests": 2932,
+              "elapsed": 6.9,
+              "qps": 424.93
+            },
+            {
+              "concurrency": 80.27,
+              "requests": 2877,
+              "elapsed": 6.71,
+              "qps": 428.76
+            }
+          ]
+        },
+        {
+          "name": "3-Node Cloud (3s \u00d7 4r, 3 ZK)",
+          "color": "#f87171",
+          "bgColor": "rgba(239,68,68,0.15)",
+          "data": [
+            {
+              "concurrency": 1.98,
+              "requests": 147,
+              "elapsed": 6.33,
+              "qps": 23.22
+            },
+            {
+              "concurrency": 2.96,
+              "requests": 377,
+              "elapsed": 6.81,
+              "qps": 55.36
+            },
+            {
+              "concurrency": 4.93,
+              "requests": 501,
+              "elapsed": 6.87,
+              "qps": 72.93
+            },
+            {
+              "concurrency": 6.91,
+              "requests": 651,
+              "elapsed": 6.82,
+              "qps": 95.45
+            },
+            {
+              "concurrency": 10.86,
+              "requests": 898,
+              "elapsed": 6.78,
+              "qps": 132.45
+            },
+            {
+              "concurrency": 12.76,
+              "requests": 898,
+              "elapsed": 6.81,
+              "qps": 131.86
+            },
+            {
+              "concurrency": 16.78,
+              "requests": 1227,
+              "elapsed": 6.85,
+              "qps": 179.12
+            },
+            {
+              "concurrency": 18.68,
+              "requests": 1639,
+              "elapsed": 6.88,
+              "qps": 238.23
+            },
+            {
+              "concurrency": 22.61,
+              "requests": 2004,
+              "elapsed": 6.81,
+              "qps": 294.27
+            },
+            {
+              "concurrency": 28.45,
+              "requests": 2242,
+              "elapsed": 6.81,
+              "qps": 329.22
+            },
+            {
+              "concurrency": 76.3,
+              "requests": 2306,
+              "elapsed": 6.9,
+              "qps": 334.2
+            },
+            {
+              "concurrency": 80.35,
+              "requests": 2229,
+              "elapsed": 6.66,
+              "qps": 334.68
+            }
+          ]
+        }
+      ];
+      /* CONFIGS_DATA_END */
+
+      // Custom C++ client data — generated from data/cpp_data.json by sync_dashboard_data.py
+      /* CPP_DATA_START */
+      const CPP_RESULTS = {
+        "_comment": "Measured QPS + latency benchmark data from the custom C++ multithreaded client (single source of truth for the dashboard's C++ section, mirroring configs.json for siege). Captured on a 22-core host (15 GB RAM) with Apache Solr 9.3.0 + ZooKeeper 3.8.1, Java 17, ~5000 Simple-English-Wikipedia docs, standalone deployment, default query terms, 8s per concurrency level. Raw run output lives in scripts/benchmark_results/cpp_results.json; regenerate the dashboard's inline CPP_RESULTS with sync_dashboard_data.py.",
+        "benchmark_tool": "cpp_multithreaded_client",
+        "name": "Standalone (C++ client)",
+        "color": "#22c55e",
+        "bgColor": "rgba(34,197,94,0.15)",
+        "data": [
+          {
+            "concurrency": 2.0,
+            "requests": 1222,
+            "elapsed": 8.01,
+            "qps": 152.63,
+            "p50": 11.24,
+            "p95": 25.63,
+            "p99": 38.83,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 2.99,
+            "requests": 3047,
+            "elapsed": 8.01,
+            "qps": 380.59,
+            "p50": 7.29,
+            "p95": 14.01,
+            "p99": 20.09,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 4.99,
+            "requests": 7024,
+            "elapsed": 8.01,
+            "qps": 877.36,
+            "p50": 5.43,
+            "p95": 8.82,
+            "p99": 11.46,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 6.98,
+            "requests": 8539,
+            "elapsed": 8.01,
+            "qps": 1066.63,
+            "p50": 6.18,
+            "p95": 10.49,
+            "p99": 13.36,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 10.98,
+            "requests": 9947,
+            "elapsed": 8.01,
+            "qps": 1241.76,
+            "p50": 8.25,
+            "p95": 13.98,
+            "p99": 18.04,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 12.97,
+            "requests": 10204,
+            "elapsed": 8.02,
+            "qps": 1272.82,
+            "p50": 9.65,
+            "p95": 15.85,
+            "p99": 19.8,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 16.96,
+            "requests": 11135,
+            "elapsed": 8.01,
+            "qps": 1389.91,
+            "p50": 11.58,
+            "p95": 18.79,
+            "p99": 22.76,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 18.96,
+            "requests": 10895,
+            "elapsed": 8.01,
+            "qps": 1359.65,
+            "p50": 13.15,
+            "p95": 21.87,
+            "p99": 26.72,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 22.94,
+            "requests": 10813,
+            "elapsed": 8.02,
+            "qps": 1348.15,
+            "p50": 16.12,
+            "p95": 26.62,
+            "p99": 32.86,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 28.94,
+            "requests": 11706,
+            "elapsed": 8.02,
+            "qps": 1459.47,
+            "p50": 18.95,
+            "p95": 30.45,
+            "p99": 36.85,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 78.7,
+            "requests": 12853,
+            "elapsed": 8.07,
+            "qps": 1593.56,
+            "p50": 47.74,
+            "p95": 72.35,
+            "p99": 88.5,
+            "availability": 100.0
+          },
+          {
+            "concurrency": 82.73,
+            "requests": 12673,
+            "elapsed": 8.04,
+            "qps": 1575.41,
+            "p50": 50.8,
+            "p95": 77.8,
+            "p99": 94.24,
+            "availability": 100.0
+          }
+        ]
+      };
+      /* CPP_DATA_END */
+
+      // Keep chart/table order monotonic by measured concurrency.
+      const CHART_CONFIGS = CONFIGS.map((config) => ({
+        ...config,
+        data: [...config.data].sort((a, b) => a.concurrency - b.concurrency),
+      }));
+      const CPP_DATA = [...CPP_RESULTS.data].sort(
+        (a, b) => a.concurrency - b.concurrency,
+      );
+
+      // Chart.js global config for dark theme
+      Chart.defaults.color = "#94a3b8";
+      Chart.defaults.borderColor = "rgba(255,255,255,0.06)";
+      Chart.defaults.font.family = "Inter, sans-serif";
+
+      const TOOLTIP_STYLE = {
+        backgroundColor: "rgba(15,15,26,0.95)",
+        borderColor: "rgba(255,255,255,0.1)",
+        borderWidth: 1,
+        padding: 12,
+      };
+      const SIEGE_LABELS = [
+        "Standalone",
+        "1-Node Cloud",
+        "3-Node / 1 ZK",
+        "3-Node / 3 ZK",
+      ];
+
+      let qpsChart, comparisonChart, cppQpsChart, cppLatencyChart;
+      let currentTableConfig = 0;
+
+      // Render a row of summary stat cards into a container.
+      function renderStats(containerId, cards) {
+        document.getElementById(containerId).innerHTML = cards
+          .map(
+            (c) => `
+            <div class="stat-card">
+              <div class="stat-value">${c.value}</div>
+              <div class="stat-label">${c.label}</div>
+              <div class="stat-detail">${c.detail}</div>
+            </div>`,
+          )
+          .join("");
+      }
+
+      function initCharts() {
+        renderCppSection();
+        renderSiegeSection();
+      }
+
+      // ---------------- Custom C++ client ----------------
+      function renderCppSection() {
+        const peak = CPP_DATA.reduce((a, b) => (b.qps > a.qps ? b : a));
+        const fastest = CPP_DATA.reduce((a, b) => (b.p50 < a.p50 ? b : a));
+        const minAvail = Math.min(...CPP_DATA.map((d) => d.availability));
+        renderStats("cppStats", [
+          {
+            value: Math.round(peak.qps).toLocaleString(),
+            label: "Peak QPS",
+            detail: `@ ${peak.concurrency.toFixed(1)} concurrency`,
+          },
+          {
+            value: fastest.p50.toFixed(1) + " ms",
+            label: "Best p50 Latency",
+            detail: `@ ${fastest.concurrency.toFixed(1)} concurrency`,
+          },
+          {
+            value: Math.round(Math.max(...CPP_DATA.map((d) => d.concurrency))),
+            label: "Max Concurrency",
+            detail: "threads sustained",
+          },
+          {
+            value: minAvail.toFixed(0) + "%",
+            label: "Availability",
+            detail: "across all levels",
+          },
+        ]);
+
+        cppQpsChart = new Chart(document.getElementById("cppQpsChart"), {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: "QPS",
+                data: CPP_DATA.map((d) => ({ x: d.concurrency, y: d.qps })),
+                borderColor: CPP_RESULTS.color,
+                backgroundColor: CPP_RESULTS.bgColor,
+                borderWidth: 2.5,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.3,
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: "nearest", intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                ...TOOLTIP_STYLE,
+                callbacks: { label: (c) => `${c.parsed.y.toFixed(0)} QPS` },
+              },
+            },
+            scales: {
+              x: {
+                type: "linear",
+                title: { display: true, text: "Measured Concurrency" },
+                grid: { color: "rgba(255,255,255,0.04)" },
+              },
+              y: {
+                title: { display: true, text: "Queries Per Second (QPS)" },
+                grid: { color: "rgba(255,255,255,0.04)" },
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+
+        const pctColors = { p50: "#22c55e", p95: "#f59e0b", p99: "#f87171" };
+        cppLatencyChart = new Chart(
+          document.getElementById("cppLatencyChart"),
+          {
+            type: "line",
+            data: {
+              datasets: ["p50", "p95", "p99"].map((k) => ({
+                label: k,
+                data: CPP_DATA.map((d) => ({ x: d.concurrency, y: d[k] })),
+                borderColor: pctColors[k],
+                backgroundColor: pctColors[k],
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                tension: 0.3,
+                fill: false,
+              })),
+            },
+            options: {
+              responsive: true,
+              interaction: { mode: "nearest", intersect: false },
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: { usePointStyle: true, padding: 16 },
+                },
+                tooltip: {
+                  ...TOOLTIP_STYLE,
+                  callbacks: {
+                    label: (c) => `${c.dataset.label}: ${c.parsed.y.toFixed(1)} ms`,
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  type: "linear",
+                  title: { display: true, text: "Measured Concurrency" },
+                  grid: { color: "rgba(255,255,255,0.04)" },
+                },
+                y: {
+                  title: { display: true, text: "Latency (ms)" },
+                  grid: { color: "rgba(255,255,255,0.04)" },
+                  beginAtZero: true,
+                },
+              },
+            },
+          },
+        );
+
+        document.getElementById("cppTableBody").innerHTML = CPP_DATA.map(
+          (d) => `
+            <tr>
+              <td>${d.concurrency.toFixed(2)}</td>
+              <td class="num">${d.requests.toLocaleString()}</td>
+              <td class="num" style="font-weight:600;color:${CPP_RESULTS.color}">${d.qps.toFixed(2)}</td>
+              <td class="num">${d.p50.toFixed(2)}</td>
+              <td class="num">${d.p95.toFixed(2)}</td>
+              <td class="num">${d.p99.toFixed(2)}</td>
+              <td class="num">${d.availability.toFixed(1)}</td>
+            </tr>`,
+        ).join("");
+      }
+
+      // ---------------- Siege client ----------------
+      function renderSiegeSection() {
+        renderStats(
+          "siegeStats",
+          CHART_CONFIGS.map((c, i) => {
+            const peak = c.data.reduce((a, b) => (b.qps > a.qps ? b : a));
+            return {
+              value: Math.round(peak.qps).toLocaleString(),
+              label: SIEGE_LABELS[i] || c.name,
+              detail: `peak @ ${peak.concurrency.toFixed(1)} concurrency`,
+            };
+          }),
+        );
+
+        qpsChart = new Chart(document.getElementById("qpsChart"), {
+          type: "line",
+          data: {
+            datasets: CHART_CONFIGS.map((config) => ({
+              label: config.name,
+              data: config.data.map((d) => ({ x: d.concurrency, y: d.qps })),
+              borderColor: config.color,
+              backgroundColor: config.bgColor,
+              borderWidth: 2,
+              pointRadius: 3,
+              pointHoverRadius: 6,
+              tension: 0.3,
+              fill: false,
+            })),
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: "nearest", intersect: false },
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: { usePointStyle: true, padding: 16 },
+              },
+              tooltip: {
+                ...TOOLTIP_STYLE,
+                callbacks: {
+                  label: (c) => `${c.dataset.label}: ${c.parsed.y.toFixed(0)} QPS`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                type: "linear",
+                title: { display: true, text: "Measured Concurrency" },
+                grid: { color: "rgba(255,255,255,0.04)" },
+              },
+              y: {
+                title: { display: true, text: "Queries Per Second (QPS)" },
+                grid: { color: "rgba(255,255,255,0.04)" },
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+
+        const peakValues = CHART_CONFIGS.map((c) =>
+          Math.max(...c.data.map((d) => d.qps)),
+        );
+        comparisonChart = new Chart(
+          document.getElementById("comparisonChart"),
+          {
+            type: "bar",
+            data: {
+              labels: SIEGE_LABELS,
+              datasets: [
+                {
+                  label: "Peak QPS",
+                  data: peakValues,
+                  backgroundColor: CHART_CONFIGS.map((c) => c.bgColor),
+                  borderColor: CHART_CONFIGS.map((c) => c.color),
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  barPercentage: 0.6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  ...TOOLTIP_STYLE,
+                  callbacks: { label: (c) => `Peak: ${c.parsed.y.toFixed(0)} QPS` },
+                },
+              },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  title: { display: true, text: "QPS" },
+                  grid: { color: "rgba(255,255,255,0.04)" },
+                  beginAtZero: true,
+                },
+              },
+            },
+          },
+        );
+
+        showTable(0);
+      }
+
+      function showComparison() {
+        const tabs = document
+          .querySelectorAll(".config-tabs")[0]
+          .querySelectorAll(".config-tab");
+        tabs.forEach((t, i) => t.classList.toggle("active", i === 0));
+        qpsChart.data.datasets.forEach((ds) => {
+          ds.hidden = false;
+        });
+        qpsChart.update();
+      }
+
+      function showSingleConfig(index) {
+        const tabs = document
+          .querySelectorAll(".config-tabs")[0]
+          .querySelectorAll(".config-tab");
+        tabs.forEach((t, i) => t.classList.toggle("active", i === index + 1));
+        qpsChart.data.datasets.forEach((ds, i) => {
+          ds.hidden = i !== index;
+        });
+        qpsChart.update();
+      }
+
+      function showTable(configIndex, clickedTab) {
+        currentTableConfig = configIndex;
+        const tbody = document.getElementById("tableBody");
+        const config = CHART_CONFIGS[configIndex];
+        if (clickedTab) {
+          document
+            .getElementById("table-tabs")
+            .querySelectorAll(".config-tab")
+            .forEach((t) => t.classList.remove("active"));
+          clickedTab.classList.add("active");
+        }
+        tbody.innerHTML = config.data
+          .map(
+            (d) => `
+            <tr>
+              <td>${d.concurrency.toFixed(2)}</td>
+              <td class="num">${d.requests.toLocaleString()}</td>
+              <td class="num">${d.elapsed.toFixed(2)}</td>
+              <td class="num" style="font-weight:600;color:${config.color}">${d.qps.toFixed(2)}</td>
+            </tr>`,
+          )
+          .join("");
+      }
+
+      document.addEventListener("DOMContentLoaded", initCharts);
+    </script>
+</body>
+</html>
