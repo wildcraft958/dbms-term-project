@@ -21,7 +21,7 @@ let currentQuery = '';
 let currentPage = 0;
 let selectedSuggestionIndex = -1;
 let selectedFacets = {
-    category: [],
+    file_name: [],
     tags: []
 };
 
@@ -254,7 +254,7 @@ function processPdfFile(file, fileName, solr_url, statusElement) {
                                 'page_number': pageNumber,
                                 'paragraph_number': paraIndex + 1,
                                 'page_count': pdf.numPages,
-                                'title': `${paragraph} - Page ${pageNumber}`,
+                                'title': `${fileName} - Page ${pageNumber}`,
                                 'last_modified': new Date().toISOString()
                             };
 
@@ -584,7 +584,10 @@ async function performSearch() {
     url += '&hl.maxAnalyzedChars=251000';
 
     // Add faceting
-    url += '&facet=on&facet.field=file_name&facet.mincount=1&facet.limit=20';
+    url += '&facet=on&facet.field=file_name&facet.field=tags&facet.mincount=1&facet.limit=20';
+
+    // Apply the sidebar facet selections as filter queries.
+    url += buildFacetFilterQuery();
 
     // Group results by file name to consolidate related paragraphs
     url += '&group=true&group.field=file_name&group.limit=10';
@@ -827,9 +830,29 @@ function renderStandardResults(data) {
     });
 }
 
+// Solr treats these as query-syntax metacharacters inside a filter query, so a
+// facet value containing one (Wikipedia titles routinely do) has to be escaped
+// or the fq silently matches nothing.
+function escapeSolrValue(value) {
+    return String(value).replace(/(["\\])/g, '\\$1');
+}
+
+function buildFacetFilterQuery() {
+    return Object.entries(selectedFacets)
+        .filter(([, values]) => values.length)
+        .map(([field, values]) => {
+            const clause = values.map(v => `"${escapeSolrValue(v)}"`).join(' OR ');
+            return `&fq=${encodeURIComponent(`${field}:(${clause})`)}`;
+        })
+        .join('');
+}
+
 function renderFacets(facetFields) {
     if (categoryFacets && facetFields.file_name) {
         renderFacetGroup(facetFields.file_name, categoryFacets, 'file_name');
+    }
+    if (tagsFacets && facetFields.tags) {
+        renderFacetGroup(facetFields.tags, tagsFacets, 'tags');
     }
 }
 
@@ -839,7 +862,7 @@ function renderFacetGroup(facetData, container, facetName) {
     const facets = [];
     for (let i = 0; i < facetData.length; i += 2) {
         facets.push({
-            value: facetData[i].slice(0, 10),
+            value: facetData[i],
             count: facetData[i + 1]
         });
     }
@@ -852,7 +875,7 @@ function renderFacetGroup(facetData, container, facetName) {
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.value = facet.value.slice(0, 10);
+        checkbox.value = facet.value;
         checkbox.checked = selectedFacets[facetName] && selectedFacets[facetName].includes(facet.value);
 
         checkbox.addEventListener('change', () => {
@@ -870,7 +893,11 @@ function renderFacetGroup(facetData, container, facetName) {
             performSearch();
         });
         label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(` ${facet.value}`));
+        // Shorten only what's displayed; the full value stays in state so the
+        // filter query still matches.
+        const display = facet.value.length > 24 ? `${facet.value.slice(0, 24)}…` : facet.value;
+        label.title = facet.value;
+        label.appendChild(document.createTextNode(` ${display}`));
 
         const count = document.createElement('span');
         count.className = 'facet-count';
