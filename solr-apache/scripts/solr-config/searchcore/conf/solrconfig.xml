@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- solrconfig.xml - Configuration for the search core -->
+<config>
+  <luceneMatchVersion>9.8.0</luceneMatchVersion>
+  <!-- Data directory for this core -->
+  <dataDir>${solr.data.dir:}</dataDir>
+  
+  <!-- Index configuration -->
+  <indexConfig>
+    <ramBufferSizeMB>128</ramBufferSizeMB>
+    <!-- <mergeFactor>10</mergeFactor> NOt in the solr 7.0 or > -->
+    <lockType>${solr.lock.type:native}</lockType>
+    <infoStream>false</infoStream>
+    <maxBufferedDocs>1000</maxBufferedDocs>
+  </indexConfig>
+  
+  <!-- JMX configuration -->
+  <jmx />
+  
+  <!-- Request handlers -->
+  <requestHandler name="/select" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <int name="rows">10</int>
+      <str name="df">text</str>
+      <str name="wt">json</str>
+      <!-- Highlighting configuration -->
+      <str name="hl">on</str>
+      <str name="hl.fl">title,content</str>
+      <str name="hl.snippets">3</str>
+      <str name="hl.fragsize">200</str>
+      
+      <!-- Faceting configuration -->
+      <str name="facet">on</str>
+      <str name="facet.field">category</str>
+      <str name="facet.field">tags</str>
+      <str name="facet.mincount">1</str>
+      <str name="facet.limit">20</str>
+    </lst>
+  </requestHandler>
+  
+  <!-- Auto-suggest configuration -->
+  <requestHandler name="/suggest" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="suggest">true</str>
+      <str name="suggest.dictionary">mySuggester</str>
+      <str name="suggest.onlyMorePopular">true</str>
+      <str name="suggest.count">10</str>
+      <str name="suggest.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggest</str>
+    </arr>
+  </requestHandler>
+  
+  <!-- Search components -->
+  <searchComponent name="suggest" class="solr.SuggestComponent">
+    <lst name="suggester">
+      <str name="name">mySuggester</str>
+      <str name="lookupImpl">FuzzyLookupFactory</str>
+      <str name="dictionaryImpl">DocumentDictionaryFactory</str>
+      <str name="field">title</str>
+      <str name="weightField">popularity</str>
+      <str name="suggestAnalyzerFieldType">text_general</str>
+      <str name="buildOnStartup">false</str>
+      <str name="buildOnCommit">false</str>
+    </lst>
+  </searchComponent>
+  
+  <!-- Update request processor chain -->
+  <updateRequestProcessorChain name="dedupe">
+    <processor class="solr.LogUpdateProcessorFactory" />
+    <processor class="solr.RunUpdateProcessorFactory" />
+  </updateRequestProcessorChain>
+</config>

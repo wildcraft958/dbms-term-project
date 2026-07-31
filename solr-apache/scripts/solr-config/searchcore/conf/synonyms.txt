@@ -1,0 +1,3 @@
+usa, united states, united states of america
+car, automobile
+tv, television

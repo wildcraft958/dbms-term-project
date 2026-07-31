@@ -1,0 +1,21 @@
+{
+  "_comment": "Measured QPS + latency benchmark data from the custom C++ multithreaded client (single source of truth for the dashboard's C++ section, mirroring configs.json for siege). Captured on a 22-core host (15 GB RAM) with Apache Solr 9.3.0 + ZooKeeper 3.8.1, Java 17, ~5000 Simple-English-Wikipedia docs, standalone deployment, default query terms, 8s per concurrency level. Raw run output lives in scripts/benchmark_results/cpp_results.json; regenerate the dashboard's inline CPP_RESULTS with sync_dashboard_data.py.",
+  "benchmark_tool": "cpp_multithreaded_client",
+  "name": "Standalone (C++ client)",
+  "color": "#22c55e",
+  "bgColor": "rgba(34,197,94,0.15)",
+  "data": [
+    { "concurrency": 2.0, "requests": 1222, "elapsed": 8.01, "qps": 152.63, "p50": 11.24, "p95": 25.63, "p99": 38.83, "availability": 100.0 },
+    { "concurrency": 2.99, "requests": 3047, "elapsed": 8.01, "qps": 380.59, "p50": 7.29, "p95": 14.01, "p99": 20.09, "availability": 100.0 },
+    { "concurrency": 4.99, "requests": 7024, "elapsed": 8.01, "qps": 877.36, "p50": 5.43, "p95": 8.82, "p99": 11.46, "availability": 100.0 },
+    { "concurrency": 6.98, "requests": 8539, "elapsed": 8.01, "qps": 1066.63, "p50": 6.18, "p95": 10.49, "p99": 13.36, "availability": 100.0 },
+    { "concurrency": 10.98, "requests": 9947, "elapsed": 8.01, "qps": 1241.76, "p50": 8.25, "p95": 13.98, "p99": 18.04, "availability": 100.0 },
+    { "concurrency": 12.97, "requests": 10204, "elapsed": 8.02, "qps": 1272.82, "p50": 9.65, "p95": 15.85, "p99": 19.8, "availability": 100.0 },
+    { "concurrency": 16.96, "requests": 11135, "elapsed": 8.01, "qps": 1389.91, "p50": 11.58, "p95": 18.79, "p99": 22.76, "availability": 100.0 },
+    { "concurrency": 18.96, "requests": 10895, "elapsed": 8.01, "qps": 1359.65, "p50": 13.15, "p95": 21.87, "p99": 26.72, "availability": 100.0 },
+    { "concurrency": 22.94, "requests": 10813, "elapsed": 8.02, "qps": 1348.15, "p50": 16.12, "p95": 26.62, "p99": 32.86, "availability": 100.0 },
+    { "concurrency": 28.94, "requests": 11706, "elapsed": 8.02, "qps": 1459.47, "p50": 18.95, "p95": 30.45, "p99": 36.85, "availability": 100.0 },
+    { "concurrency": 78.7, "requests": 12853, "elapsed": 8.07, "qps": 1593.56, "p50": 47.74, "p95": 72.35, "p99": 88.5, "availability": 100.0 },
+    { "concurrency": 82.73, "requests": 12673, "elapsed": 8.04, "qps": 1575.41, "p50": 50.8, "p95": 77.8, "p99": 94.24, "availability": 100.0 }
+  ]
+}

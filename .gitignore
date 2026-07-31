@@ -1,0 +1,67 @@
+# ========================
+# Build artifacts
+# ========================
+benchmark/build/
+*.o
+*.out
+*.exe
+
+# ========================
+# CMake
+# ========================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# ========================
+# Solr runtime data
+# ========================
+solr-apache/scripts/downloads/
+solr-apache/scripts/solr-nodes/
+solr-apache/scripts/zookeeper/
+solr-apache/searchcores/data/
+solr-apache/scripts/data/
+
+# ========================
+# Benchmark results (regenerable)
+# ========================
+solr-apache/scripts/benchmark_results/
+solr-apache/scripts/benchmark/results/report_*/
+solr-apache/scripts/visualizations/
+
+# ========================
+# Generated benchmark charts (regenerable from configs.json / siege results)
+# ========================
+solr-apache/webapp/images/comparison_*_latest.png
+solr-apache/webapp/images/standalone_scaling_*_latest.png
+
+# ========================
+# OS / IDE
+# ========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.iml
+
+# ========================
+# Logs
+# ========================
+*.log
+nohup.out

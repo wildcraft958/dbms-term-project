@@ -1,0 +1,321 @@
+{
+  "_comment": "Measured QPS benchmark data (single source of truth for compare_configs.py and benchmark.html). Reproduced on a 22-core host (15 GB RAM) with Apache Solr 9.3.0 + ZooKeeper 3.8.1, Java 17, ~5000 Simple-English-Wikipedia docs, siege benchmark query q=city, ~6s per concurrency level. Each data row is [concurrency, requests, elapsed_seconds, qps] as named fields. Regenerate the dashboard with sync_dashboard_data.py and charts with compare_configs.py.",
+  "configs": [
+    {
+      "name": "Standalone",
+      "color": "#22c55e",
+      "bgColor": "rgba(34,197,94,0.15)",
+      "data": [
+        {
+          "concurrency": 1.97,
+          "requests": 1530,
+          "elapsed": 6.42,
+          "qps": 238.32
+        },
+        {
+          "concurrency": 2.92,
+          "requests": 3401,
+          "elapsed": 6.92,
+          "qps": 491.47
+        },
+        {
+          "concurrency": 4.87,
+          "requests": 5453,
+          "elapsed": 6.92,
+          "qps": 788.01
+        },
+        {
+          "concurrency": 6.84,
+          "requests": 7364,
+          "elapsed": 6.91,
+          "qps": 1065.7
+        },
+        {
+          "concurrency": 10.71,
+          "requests": 9410,
+          "elapsed": 6.92,
+          "qps": 1359.83
+        },
+        {
+          "concurrency": 12.7,
+          "requests": 10382,
+          "elapsed": 6.92,
+          "qps": 1500.29
+        },
+        {
+          "concurrency": 16.64,
+          "requests": 11231,
+          "elapsed": 6.92,
+          "qps": 1622.98
+        },
+        {
+          "concurrency": 18.63,
+          "requests": 11100,
+          "elapsed": 6.9,
+          "qps": 1608.7
+        },
+        {
+          "concurrency": 22.57,
+          "requests": 12191,
+          "elapsed": 6.92,
+          "qps": 1761.71
+        },
+        {
+          "concurrency": 28.53,
+          "requests": 13233,
+          "elapsed": 6.89,
+          "qps": 1920.61
+        },
+        {
+          "concurrency": 77.82,
+          "requests": 13550,
+          "elapsed": 6.93,
+          "qps": 1955.27
+        },
+        {
+          "concurrency": 81.53,
+          "requests": 13689,
+          "elapsed": 6.89,
+          "qps": 1986.79
+        }
+      ]
+    },
+    {
+      "name": "1-Node Cloud (2s \u00d7 2r, 1 ZK)",
+      "color": "#818cf8",
+      "bgColor": "rgba(99,102,241,0.15)",
+      "data": [
+        {
+          "concurrency": 1.97,
+          "requests": 239,
+          "elapsed": 6.17,
+          "qps": 38.74
+        },
+        {
+          "concurrency": 2.96,
+          "requests": 694,
+          "elapsed": 6.76,
+          "qps": 102.66
+        },
+        {
+          "concurrency": 4.93,
+          "requests": 875,
+          "elapsed": 6.91,
+          "qps": 126.63
+        },
+        {
+          "concurrency": 6.89,
+          "requests": 1241,
+          "elapsed": 6.7,
+          "qps": 185.22
+        },
+        {
+          "concurrency": 10.83,
+          "requests": 1819,
+          "elapsed": 6.7,
+          "qps": 271.49
+        },
+        {
+          "concurrency": 12.76,
+          "requests": 1740,
+          "elapsed": 6.84,
+          "qps": 254.39
+        },
+        {
+          "concurrency": 16.78,
+          "requests": 2296,
+          "elapsed": 6.97,
+          "qps": 329.41
+        },
+        {
+          "concurrency": 18.69,
+          "requests": 2156,
+          "elapsed": 6.72,
+          "qps": 320.83
+        },
+        {
+          "concurrency": 22.66,
+          "requests": 2076,
+          "elapsed": 6.88,
+          "qps": 301.74
+        },
+        {
+          "concurrency": 28.61,
+          "requests": 2641,
+          "elapsed": 6.88,
+          "qps": 383.87
+        },
+        {
+          "concurrency": 75.94,
+          "requests": 1926,
+          "elapsed": 6.94,
+          "qps": 277.52
+        },
+        {
+          "concurrency": 80.23,
+          "requests": 2231,
+          "elapsed": 6.79,
+          "qps": 328.57
+        }
+      ]
+    },
+    {
+      "name": "3-Node Cloud (3s \u00d7 4r, 1 ZK)",
+      "color": "#f59e0b",
+      "bgColor": "rgba(245,158,11,0.15)",
+      "data": [
+        {
+          "concurrency": 1.99,
+          "requests": 77,
+          "elapsed": 6.3,
+          "qps": 12.22
+        },
+        {
+          "concurrency": 2.97,
+          "requests": 316,
+          "elapsed": 6.89,
+          "qps": 45.86
+        },
+        {
+          "concurrency": 4.94,
+          "requests": 478,
+          "elapsed": 6.81,
+          "qps": 70.19
+        },
+        {
+          "concurrency": 6.91,
+          "requests": 642,
+          "elapsed": 6.59,
+          "qps": 97.42
+        },
+        {
+          "concurrency": 10.8,
+          "requests": 909,
+          "elapsed": 6.81,
+          "qps": 133.48
+        },
+        {
+          "concurrency": 12.81,
+          "requests": 889,
+          "elapsed": 6.81,
+          "qps": 130.54
+        },
+        {
+          "concurrency": 16.74,
+          "requests": 1158,
+          "elapsed": 6.76,
+          "qps": 171.3
+        },
+        {
+          "concurrency": 18.77,
+          "requests": 1926,
+          "elapsed": 6.85,
+          "qps": 281.17
+        },
+        {
+          "concurrency": 22.72,
+          "requests": 2227,
+          "elapsed": 6.91,
+          "qps": 322.29
+        },
+        {
+          "concurrency": 28.59,
+          "requests": 2634,
+          "elapsed": 6.93,
+          "qps": 380.09
+        },
+        {
+          "concurrency": 75.61,
+          "requests": 2932,
+          "elapsed": 6.9,
+          "qps": 424.93
+        },
+        {
+          "concurrency": 80.27,
+          "requests": 2877,
+          "elapsed": 6.71,
+          "qps": 428.76
+        }
+      ]
+    },
+    {
+      "name": "3-Node Cloud (3s \u00d7 4r, 3 ZK)",
+      "color": "#f87171",
+      "bgColor": "rgba(239,68,68,0.15)",
+      "data": [
+        {
+          "concurrency": 1.98,
+          "requests": 147,
+          "elapsed": 6.33,
+          "qps": 23.22
+        },
+        {
+          "concurrency": 2.96,
+          "requests": 377,
+          "elapsed": 6.81,
+          "qps": 55.36
+        },
+        {
+          "concurrency": 4.93,
+          "requests": 501,
+          "elapsed": 6.87,
+          "qps": 72.93
+        },
+        {
+          "concurrency": 6.91,
+          "requests": 651,
+          "elapsed": 6.82,
+          "qps": 95.45
+        },
+        {
+          "concurrency": 10.86,
+          "requests": 898,
+          "elapsed": 6.78,
+          "qps": 132.45
+        },
+        {
+          "concurrency": 12.76,
+          "requests": 898,
+          "elapsed": 6.81,
+          "qps": 131.86
+        },
+        {
+          "concurrency": 16.78,
+          "requests": 1227,
+          "elapsed": 6.85,
+          "qps": 179.12
+        },
+        {
+          "concurrency": 18.68,
+          "requests": 1639,
+          "elapsed": 6.88,
+          "qps": 238.23
+        },
+        {
+          "concurrency": 22.61,
+          "requests": 2004,
+          "elapsed": 6.81,
+          "qps": 294.27
+        },
+        {
+          "concurrency": 28.45,
+          "requests": 2242,
+          "elapsed": 6.81,
+          "qps": 329.22
+        },
+        {
+          "concurrency": 76.3,
+          "requests": 2306,
+          "elapsed": 6.9,
+          "qps": 334.2
+        },
+        {
+          "concurrency": 80.35,
+          "requests": 2229,
+          "elapsed": 6.66,
+          "qps": 334.68
+        }
+      ]
+    }
+  ]
+}

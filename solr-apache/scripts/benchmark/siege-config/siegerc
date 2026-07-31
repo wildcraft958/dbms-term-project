@@ -1,0 +1,15 @@
+# siege resource file for the Solr benchmark scripts.
+#
+# run-siege-benchmark.sh parses siege's stats as JSON, which siege only emits
+# when json_output is enabled. This file is referenced explicitly via
+# `siege -R` so the benchmark works on a fresh checkout without depending on a
+# user's personal ~/.siege/siege.conf.
+
+# Print final stats as JSON to stdout (required by the result parser).
+json_output = true
+
+# Don't print the "LOG FILE: ..." notification or write to a system log.
+show-logfile = false
+logging = false
+
+# Benchmark mode defaults (no inter-request delay) are passed on the CLI.
