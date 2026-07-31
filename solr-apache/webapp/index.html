@@ -7,7 +7,7 @@
       name="description"
       content="High-performance distributed text search engine powered by Apache Solr and ZooKeeper with real-time full-text search, faceted navigation, and document upload."
     />
-    <title>SolrSearch — Distributed Search Engine</title>
+    <title>SolrSearch - Distributed Search Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -158,6 +158,72 @@
         </div>
       </div>
     </main>
+
+    <!-- Document Upload -->
+    <section class="upload-section" id="upload-section">
+      <div class="upload-container">
+        <div class="upload-header">
+          <svg
+            class="upload-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <h2>Index a Document</h2>
+          <p>Add a PDF or text file to the search index</p>
+        </div>
+
+        <form id="upload-document" class="upload-form">
+          <div class="file-drop-zone" id="file-drop-zone">
+            <label for="file-upload" class="drop-label">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              <span class="drop-text">Drop a file here or <em>browse</em></span>
+              <span class="drop-hint">PDF and plain text supported</span>
+            </label>
+            <input
+              type="file"
+              id="file-upload"
+              class="file-input-hidden"
+              accept=".pdf,.txt,.md,text/plain,application/pdf"
+              aria-label="Choose a document to index"
+            />
+          </div>
+
+          <span id="file-name" class="selected-file"></span>
+
+          <button type="submit" id="upload-button" class="upload-btn" disabled>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span>Index Document</span>
+          </button>
+
+          <div id="upload-status" class="upload-status" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.5.141/pdf.min.js"></script>
     <script>
