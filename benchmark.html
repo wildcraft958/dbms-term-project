@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Apache Solr benchmark dashboard — QPS, latency, and availability analysis across standalone and SolrCloud configurations."
+      content="Apache Solr benchmark dashboard - QPS, latency, and availability analysis across standalone and SolrCloud configurations."
     />
     <title>Benchmark Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -296,7 +296,7 @@
     <!-- Header -->
     <div class="dashboard-header">
       <h1>Benchmark Dashboard</h1>
-      <p>Apache Solr 9.3.0 throughput &amp; latency under load — measured by
+      <p>Apache Solr 9.3.0 throughput &amp; latency under load - measured by
         two independent clients on identical hardware.</p>
     </div>
 
@@ -329,7 +329,7 @@
       <!-- ===================== Custom C++ Client ===================== -->
       <h2 class="section-title">Custom C++ Multithreaded Client</h2>
       <p class="section-desc">
-        A standalone <strong>C++17</strong> load-test client — reused
+        A standalone <strong>C++17</strong> load-test client - reused
         <code>libcurl</code> connection pool, raw <code>std::thread</code>
         workers, and measured concurrency via Little's Law
         (<code>L = &lambda; &times; W</code>). Run live against the
@@ -368,7 +368,7 @@
       <h2 class="section-title">Siege Client</h2>
       <p class="section-desc">
         The <strong>siege</strong> HTTP load-tester across four Solr
-        deployments — standalone plus three SolrCloud topologies. It emits
+        deployments - standalone plus three SolrCloud topologies. It emits
         the same siege-compatible JSON schema as the C++ client, enabling a
         head-to-head deployment comparison on identical hardware.
       </p>
