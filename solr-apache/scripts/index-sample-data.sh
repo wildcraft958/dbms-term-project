@@ -231,5 +231,11 @@ done
 echo "Optimizing the index..."
 curl --fail -X POST "$SOLR_URL/update?optimize=true&waitFlush=true" > /dev/null
 
+# The suggester dictionary is built from the index, not from each commit
+# (buildOnCommit is off so indexing isn't slowed by a rebuild per chunk), so it
+# has to be built once here or autocomplete returns nothing until a restart.
+echo "Building the autocomplete dictionary..."
+curl --fail -s "$SOLR_URL/suggest?suggest.build=true" > /dev/null
+
 echo "Indexing complete! Indexed $ACTUAL_COUNT documents from Wikipedia dump."
 echo "You can now run the benchmark scripts to test performance."
